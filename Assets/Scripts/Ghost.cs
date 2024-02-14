@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Ghost : MonoBehaviour
 {
@@ -11,13 +12,18 @@ public class Ghost : MonoBehaviour
 
     [SerializeField] private float chaseSpeed = 1f;
     [SerializeField] private float chaseRotateSpeed = 1f;
+    [SerializeField] private float startChaseOffset = 3f;
     [SerializeField] private float stopOffset = 1f;
-    
+
+    [SerializeField] private Animator animator;
+
+    private float speedBefore;
     private bool _isChaseTargetActive;
     
     // Start is called before the first frame update
     void Start()
     {
+        speedBefore = chaseSpeed;
         CheckActive();
         isOnChase = false;
         isOnPatrol = true;
@@ -43,15 +49,39 @@ public class Ghost : MonoBehaviour
 
     void GhostChase()
     {
-        if (!isOnChase) { return; }
-        if (Vector3.Distance(chaseTarget.transform.position, transform.position) <= stopOffset) { return; }
-        
+
+        if (Vector3.Distance(chaseTarget.transform.position, transform.position) <= startChaseOffset)
+        {
+            isOnPatrol = false;
+            isOnChase = true;
+        }
+        else
+        {
+            isOnPatrol = true;
+            isOnChase = false;
+        }
+
+        if (isOnPatrol) return;
+        if (Vector3.Distance(chaseTarget.transform.position, transform.position) <= stopOffset )
+        {
+            animator.SetBool("NearTarget",true);
+            chaseSpeed = 0;
+        }
+            
+        if (Vector3.Distance(chaseTarget.transform.position, transform.position) >= stopOffset)
+        {
+            animator.SetBool("NearTarget",false);
+            chaseSpeed = speedBefore;
+        }
+            
         var lookAtPosition =
             Quaternion.LookRotation(chaseTarget.transform.position - transform.position);
-        
+                    
         transform.rotation = 
             Quaternion.Slerp(transform.rotation, lookAtPosition, chaseRotateSpeed * Time.deltaTime);
-        
+                    
         transform.Translate(0, 0, chaseSpeed * Time.deltaTime);
+
     }
+    
 }
