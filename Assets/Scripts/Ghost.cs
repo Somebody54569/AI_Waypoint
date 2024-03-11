@@ -17,6 +17,10 @@ public class Ghost : MonoBehaviour
 
     [SerializeField] private Animator animator;
 
+    [SerializeField] private AudioSource zombieSound;
+
+    [SerializeField] private FOV fov;
+
     private float speedBefore;
     private bool _isChaseTargetActive;
     
@@ -50,15 +54,17 @@ public class Ghost : MonoBehaviour
     void GhostChase()
     {
 
-        if (Vector3.Distance(chaseTarget.transform.position, transform.position) <= startChaseOffset)
+        if (fov.canSeePlayer)
         {
             isOnPatrol = false;
             isOnChase = true;
+            zombieSound.mute = false;
         }
         else
         {
             isOnPatrol = true;
             isOnChase = false;
+            zombieSound.mute = true;
         }
 
         if (isOnPatrol) return;
@@ -73,6 +79,16 @@ public class Ghost : MonoBehaviour
             animator.SetBool("NearTarget",false);
             chaseSpeed = speedBefore;
         }
+
+        if (Vector3.Distance(chaseTarget.transform.position, transform.position) <= fov.speedUpRadius)
+        {
+            chaseSpeed *= 2;
+        }
+        else
+        {
+            chaseSpeed = speedBefore;
+        }
+        
             
         var lookAtPosition =
             Quaternion.LookRotation(chaseTarget.transform.position - transform.position);
@@ -81,7 +97,6 @@ public class Ghost : MonoBehaviour
             Quaternion.Slerp(transform.rotation, lookAtPosition, chaseRotateSpeed * Time.deltaTime);
                     
         transform.Translate(0, 0, chaseSpeed * Time.deltaTime);
-
     }
     
 }
